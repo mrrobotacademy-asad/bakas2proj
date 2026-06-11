@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎪 مغامرة الأشكال السحرية البرمجية</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { 
+            text-align: center; 
+            margin-bottom: 25px; 
+            background: linear-gradient(45deg, #ff007f, #7f00ff);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+        header h1 { color: #fff; margin: 0; font-size: 28px; text-shadow: 2px 2px #000; }
+        header p { color: #ffeb3b; margin: 5px 0 0 0; font-weight: bold; }
+        
+        .main-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .main-layout { grid-template-columns: 1fr; } }
+        
+        .task-card {
+            background-color: #252542;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 3px solid #ff007f;
+        }
+        .task-card.active { border-color: #00ffcc; }
+        
+        .task-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111122;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .task-status { font-weight: bold; color: #ffeb3b; font-size: 18px; }
+        
+        textarea {
+            width: 100%;
+            height: 250px;
+            background-color: #0f0f1a;
+            color: #00ffcc;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+            font-weight: bold;
+            border: 2px solid #444477;
+            border-radius: 10px;
+            padding: 15px;
+            box-sizing: border-box;
+            direction: ltr;
+            text-align: left;
+            line-height: 1.6;
+        }
+        
+        .nav-buttons-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #00ffcc, #0077ff);
+            color: #111;
+            border: none;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(0,255,204,0.3);
+            transition: 0.3s;
+        }
+        .btn:hover { transform: scale(1.02); background: linear-gradient(45deg, #ff007f, #ffaa00); color: white; }
+        .btn-nav { background: #444477; color: white; box-shadow: none; }
+        .btn-nav:disabled { background: #222233; color: #666; cursor: not-allowed; transform: none; }
+        .btn-success { background: linear-gradient(45deg, #00ffcc, #a6e3a1); flex-grow: 2; }
+        
+        #canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0f0f1a;
+            height: 320px;
+            border-radius: 15px;
+            border: 3px solid #444477;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .explanation-box {
+            background-color: #111122;
+            border-right: 5px solid #ffeb3b;
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        .instructions {
+            background-color: #2d2d54;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 15px;
+            border-left: 5px solid #00ffcc;
+        }
+        
+        .hidden { display: none !important; }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: #111122;
+            border: 2px solid #444477;
+            color: #fff;
+            font-size: 16px;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🎪 وادي السحر البرمجي: تحدي الأشكال المتحركة</h1>
+        <p>مهمتك: فك شفرة الألعاب الستة لتصبح "كابتن المبرمجين" وترسل تقريرك السري للقائد! 🎯</p>
+    </header>
+
+    <div class="main-layout">
+        <div class="task-card active">
+            <div class="task-navigation">
+                <span class="task-status" id="task-title">🎮 اللغز 1</span>
+                <span id="completion-badge" style="color: #ff007f; font-weight: bold;">🔒 مقفل</span>
+            </div>
+
+            <div class="explanation-box" id="task-explanation"></div>
+            <div class="instructions" id="task-instructions"></div>
+
+            <textarea id="code-editor" spellcheck="false"></textarea>
+            
+            <div class="nav-buttons-container">
+                <button class="btn btn-nav" id="prev-btn" onclick="prevTask()">⬅️ السابق</button>
+                <button class="btn btn-success" id="check-btn" onclick="checkCurrentTask()">🔮 تجربة وتشغيل الكود</button>
+                <button class="btn btn-nav" id="next-btn" onclick="nextTask()">التالي ➡️</button>
+            </div>
+        </div>
+
+        <div class="preview-section" style="background-color: #252542; padding: 20px; border-radius: 15px;">
+            <h3 style="margin-top:0; text-align:center; color:#00ffcc;">📺 شاشة العرض السحرية (تتحرك عند الضغط على التشغيل)</h3>
+            <div id="canvas-container"></div>
+
+            <div id="final-report" class="hidden" style="background: #111122; padding: 20px; border-radius: 10px; border: 2px dashed #00ffcc;">
+                <h3 style="color: #ffeb3b; text-align: center; margin-top: 0;">🎉 واااو! لقد فككت جميع الشفرات بنجاح! 🏆</h3>
+                <p style="text-align:center;">اكتب اسمك البطل بالأسفل عشان نبعت تقرير الإنجاز السري للأستاذ على الواتساب!</p>
+                <input type="text" id="student-name" placeholder="اكتب اسمك البطل هنا... 😎" required>
+                <button class="btn" style="background: linear-gradient(45deg, #40a02b, #25731f); color: white;" onclick="sendWhatsAppReport()">💬 إرسال التقرير النهائي للمعلم</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const tasks = [
+        {
+            title: "🎮 اللغز 1: صندوق الأسرار السحري (let)",
+            explanation: "🧙‍♂️ <b>حكاية الكود:</b> المتغير <code>let</code> ده زي <b>'صندوق ألعاب سحري'</b> بنكتب عليه اسم ونشيل جواه قيمة! عندنا صندوق اسمه <code>speed</code> بيتحكم في السرعة، وصندوق اسمه <code>shapeSize</code> بيتحكم في الحجم.",
+            instructions: "🎯 <b>مهمتك يا بطل:</b> الكهف بطيء جداً! افتح الصندوق يساراً وخلي السرعة <code>speed = 5</code> عشان الشكل يجري بسرعة، وخلي حجم الشكل <code>shapeSize = 80</code> عشان يكبر ونشوفه واضغط زر التجربة!",
+            startCode: `// لغز 1: افتح الصناديق السحرية وغير الأرقام\nlet speed = 1;\nlet shapeSize = 30;\n\nfunction drawShape(x, y) {\n    fill(0, 255, 204);\n    circle(x, y, shapeSize);\n}`,
+            check: function(code) {
+                let clean = code.replace(/\s/g, "");
+                if (clean.includes("speed=1;") || clean.includes("speed=1\n")) return "❌ أوبس! لسه السرعة بتساوي 1، خليها speed = 5;";
+                if (clean.includes("shapeSize=30;") || clean.includes("shapeSize=30\n")) return "❌ أوبس! لسه حجم الشكل بيساوي 30، خليه shapeSize = 80;";
+                if (!clean.includes("speed=5")) return "❌ تأكد من كتابة السرعة هكذا بالضبط: speed = 5;";
+                if (!clean.includes("shapeSize=80")) return "❌ تأكد من كتابة الحجم هكذا بالضبط: shapeSize = 80;";
+                return true;
+            }
+        },
+        {
+            title: "🎮 اللغز 2: تبديل الألعاب (إعادة التعيين)",
+            explanation: "🧙‍♂️ <b>حكاية الكود:</b> المبرمج الذكي يقدر يغير اللعبة اللي جوه الصندوق من غير ما يشتري صندوق جديد! يعني نقدر نغير قيمة <code>shapeSize</code> في نص الطريق عادي جداً وده بنسميه 'إعادة تعيين القيمة'.",
+            instructions: "🎯 <b>مهمتك يا بطل:</b> عايزين الكرات تكبر فجأة لما تعدي نص الشاشة اليمين (يعني x أكبر من 190). غير الرقم المكتوب 0 وخلي مكانه <code>150</code> وشوف المفاجأة على الشاشة!",
+            startCode: `// لغز 2: غير اللعبة اللي جوه الصندوق\nlet speed = 5;\nlet shapeSize = 80;\n\nfunction updateLogic(x) {\n    if (x > 190) {\n        shapeSize = 0; // امسح الـ 0 واكتب مكانها 150\n    }\n}\n\nfunction drawShape(x, y) {\n    fill(255, 0, 127);\n    circle(x, y, shapeSize);\n}`,
+            check: function(code) {
+                let clean = code.replace(/\s/g, "");
+                if (clean.includes("shapeSize=0;")) return "❌ الخطأ: لسه قيمة shapeSize بتساوي 0، غيرها واكتب مكانها 150";
+                if (!clean.includes("shapeSize=150;")) return "❌ الخطأ: تأكد من تعديل السطر رقم 7 ليصبح: shapeSize = 150; ولا تنسَ الفاصلة المنقوطة.";
+                return true;
+            }
+        },
+        {
+            title: "🎮 اللغز 3: بوابة الاختيارات الذكية (if else)",
+            explanation: "🧙‍♂️ <b>حكاية الكود:</b> قاعدة <code>if else</code> دي زي <b>'حارس البوابة الذكي'</b>، بنقوله: 'لو (if) الماوس فوق، لون الشكل بالأحمر، وإلا (else) لونه بالأزرق'.",
+            instructions: "🎯 <b>مهمتك يا بطل:</b> الحارس مش عارف يلون باللون الأزرق! ساعده واكتب أمر اللون الأزرق وهو <code>fill(0, 0, 255);</code> جوه قوسين الـ <code>else</code> عشان لما تنزل بالماوس لتحت يتغير اللون فوراً!",
+            startCode: `// لغز 3: ساعد حارس البوابة يختار اللون البديل\nlet speed = 5; let shapeSize = 80;\n\nfunction drawShape(x, y) {\n    if (mouseY < 150) {\n        fill(255, 0, 0);\n    } else {\n        // اكتب هنا أمر اللون الأزرق: fill(0, 0, 255);\n        \n    }\n    circle(x, y, shapeSize);\n}`,
+            check: function(code) {
+                let clean = code.replace(/\s/g, "");
+                if (clean.includes("else{}") || !clean.includes("else{fill")) {
+                    return "❌ أوبس! لم تقم بكتابة أمر التلوين داخل الـ else.\n💡 نصيحة سحرية: اكتب السطر ده بالظبط داخل القوسين: fill(0, 0, 255);";
+                }
+                if (!clean.includes("else{fill(0,0,255);")) {
+                    return "💡 تلميح ذكي جداً: كودك ممتاز وقرب يشتغل! بس نسيت تحط الفاصلة المنقوطة ( ; ) في نهاية الأمر كدة: fill(0, 0, 255);";
+                }
+                return true;
+            }
+        },
+        {
+            title: "🎮 اللغز 4: عصا التحول السحرية (else if)",
+            explanation: "🧙‍♂️ <b>حكاية الكود:</b> لما يكون عندنا كذا شكل عايزين نختار منهم، بنستخدم <code>else if</code> عشان نضيف شروط تانية. هنا بنقوله لو شكل 'circle' ارسم دائرة, ولو شكل 'rect' اتصرف وارسم مربع!",
+            instructions: "🎯 <b>مهمتك يا بطل:</b> السحر معطل على كلمة 'unknown'. غيرها واكتب مكانها كلمة <code>rect</code> عشان يفهم الشرط التاني ويتحول المخرج البصري لمربع جميل ومتحرك!",
+            startCode: `// لغز 4: غير كلمة unknown إلى rect لتفعيل المربع\nlet speed = 5; let shapeSize = 80;\nlet shapeType = "rect";\n\nfunction drawShape(x, y) {\n    fill(255, 235, 59);\n    \n    if (shapeType === "circle") {\n        circle(x, y, shapeSize);\n    } else if (shapeType === "unknown") {\n        rectMode(CENTER);\n        rect(x, y, shapeSize, shapeSize);\n    }\n}`,
+            check: function(code) {
+                let clean = code.replace(/\s/g, "");
+                if (clean.includes('"unknown"') || clean.includes("'unknown'")) {
+                    return "❌ الخطأ: لسه كلمة \"unknown\" موجودة في كود الـ else if! امسحها واكتب مكانها \"rect\"";
+                }
+                if (!clean.includes('elseif(shapeType==="rect")')) {
+                    return "❌ الخطأ: تأكد من تعديل الشرط في السطر 10 بالظبط ليكون: else if (shapeType === \"rect\")";
+                }
+                return true;
+            }
+        },
+        {
+            title: "🎮 اللغز 5: الأوامر الكثيرة المستقلة (if فقط)",
+            explanation: "🧙‍♂️ <b>حكاية الكود:</b> لما نكتب كذا <code>if</code> تحت بعض من غير else، ده معناه إن كل شرط عايش في بيته لوحده! والكمبيوتر هينفذ أي شرط يتحقق بشكل مستقل تماماً.",
+            instructions: "🎯 <b>مهمتك يا بطل:</b> أكتب شرط <code>if</code> جديد لوحده بالأسفل، بحيث لو حجم الشكل أكبر من 100 <code>if (shapeSize > 100)</code> تجعل خط الإطار سميك بالأمر ده <code>strokeWeight(5);</code> ولونه يتغير فوراً للون الأحمر المضيء!",
+            startCode: `// لغز 5: أكتب شرط if مستقل تماماً بالأسفل\nlet speed = 5; let shapeSize = 120;\n\nfunction drawShape(x, y) {\n    // الإطار العادي باللون الأزرق الخفيف والرفيع\n    stroke(0, 150, 255); \n    strokeWeight(1);\n    \n    if (shapeSize > 50) {\n        // ده الشرط المستقل الأول\n    }\n    \n    // اكتب شرط الـ if الجديد هنا لفحص لو shapeSize > 100 واجعل الخواص strokeWeight(5);\n    \n\n    circle(x, y, shapeSize);\n}`,
+            check: function(code) {
+                let clean = code.replace(/\s/g, "");
+                if (clean.includes("else")) {
+                    return "❌ خطأ: التحدي يطلب شرط if مستقل تماماً وليس باستخدام else!";
+                }
+                if (!clean.includes("if(shapeSize>100)")) {
+                    return "❌ الخطأ: لم تقم بكتابة شرط الفحص الجديد بشكل صحيح: if (shapeSize > 100)";
+                }
+                if (!clean.includes("if(shapeSize>100){strokeWeight(5);")) {
+                    if (clean.includes("strokeWeight(5)") && !clean.includes("strokeWeight(5);")) {
+                        return "💡 تلميح: كودك ممتاز! لكن نسيت وضع الفاصلة المنقوطة ( ; ) بعد الأمر لتصبح هكذا: strokeWeight(5);";
+                    }
+                    return "❌ الخطأ: تأكد من وضع أمر زيادة السمك داخل الأقواس المعقوفة { } هكذا: { strokeWeight(5); }";
+                }
+                return true;
+            }
+        },
+        {
+            title: "🎮 اللغز 6 والأخير: قفل الأمان الثنائي (&&)",
+            explanation: "🧙‍♂️ <b>حكاية الكود:</b> الرابط السحري <code>&&</code> معناه <b>'لازم وبدقة الشرطين يتحققوا مع بعض'</b>! زي قفل الخزنة اللي بيحتاج مفتاحين في نفس اللحظة عشان تفتح وتتغير الخلفية.",
+            instructions: "🎯 <b>مهمتك الأخيرة:</b> غير كلمة <code>AND</code> اللي في الكود وحط مكانها الرمز البرمجي الحقيقي ليها وهو <code>&&</code> وشوف إزاي الشاشة هتتحول للون بنفسجي مبهر لما الشرطين يشتغلوا مع بعض!",
+            startCode: `// لغز 6: استبدل كلمة AND بالرمز الحقيقي &&\nlet speed = 4; let shapeSize = 70;\n\nfunction drawShape(x, y) {\n    \n    // لازم شرط موقع الشاشة x وشرط موقع الماوس يتحققوا معاً\n    if (x > 100 AND mouseY > 100) {\n        background(120, 0, 200);\n    }\n    \n    fill(0, 255, 100);\n    circle(x, y, shapeSize);\n}`,
+            check: function(code) {
+                let codeWithoutComments = code.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, "");
+                let clean = codeWithoutComments.replace(/\s/g, "");
+                
+                if (clean.includes("AND")) {
+                    return "❌ الخطأ: لسه كلمة AND موجودة في الشرط! امسحها واكتب مكانها الرمز السحري &&";
+                }
+                if (clean.includes("x>100&mouseY>100") && !clean.includes("x>100&&mouseY>100")) {
+                    return "💡 تلميح ذكي: في لغة جافاسكريبت، بوابات الربط تكتب بعلامتين && وليس علامة واحدة &، قم بتعديلها لتصبح &&";
+                }
+                if (!clean.includes("if(x>100&&mouseY>100)")) {
+                    return "❌ الخطأ: تأكد من وضع الرمز && بين الشرطين داخل القوسين ليكون هكذا بالضبط: if (x > 100 && mouseY > 100)";
+                }
+                return true;
+            }
+        }
+    ];
+
+    let currentTaskIndex = 0;
+    let maxOpenedTaskIndex = 0; 
+    let posX = 0;
+    let direction = 1;
+    let studentHistory = []; 
+    let activeExecutedCode = ""; 
+
+    let savedStudentCodes = tasks.map(t => t.startCode);
+
+    function loadTask(index) {
+        if(index < 0 || index > tasks.length) return;
+
+        if (index === tasks.length) {
+            document.getElementById('task-title').innerText = "🏆 بطل الأبطال!";
+            document.getElementById('task-explanation').innerHTML = "لقد فزت بلقب مبرمج المستقبل وحللت جميع الألغاز البرمجية بنجاح مبهر!";
+            document.getElementById('task-instructions').innerHTML = "الآن، سجّل اسمك واضغط إرسال لمشاركة إنجازك العظيم مع معلمك!";
+            document.getElementById('code-editor').classList.add('hidden');
+            document.getElementById('check-btn').classList.add('hidden');
+            document.getElementById('completion-badge').innerText = "🔓 تم فتح كل شيء بنجاح!";
+            document.getElementById('completion-badge').style.color = "#00ffcc";
+            document.getElementById('final-report').classList.remove('hidden');
+            
+            document.getElementById('prev-btn').disabled = false;
+            document.getElementById('next-btn').disabled = true;
+            return;
+        }
+        
+        document.getElementById('final-report').classList.add('hidden');
+        document.getElementById('code-editor').classList.remove('hidden');
+        document.getElementById('check-btn').classList.remove('hidden');
+
+        currentTaskIndex = index;
+        activeExecutedCode = savedStudentCodes[index]; 
+
+        document.getElementById('task-title').innerText = tasks[index].title;
+        document.getElementById('task-explanation').innerHTML = tasks[index].explanation;
+        document.getElementById('task-instructions').innerHTML = tasks[index].instructions;
+        document.getElementById('code-editor').value = savedStudentCodes[index];
+        
+        if (index <= maxOpenedTaskIndex && studentHistory[index] !== undefined) {
+            document.getElementById('completion-badge').innerText = "🎉 مجتاز بنجاح";
+            document.getElementById('completion-badge').style.color = "#00ffcc";
+        } else {
+            document.getElementById('completion-badge').innerText = "🔒 مقفل";
+            document.getElementById('completion-badge').style.color = "#ff007f";
+        }
+
+        document.getElementById('prev-btn').disabled = (index === 0);
+        document.getElementById('next-btn').disabled = (index > maxOpenedTaskIndex);
+    }
+
+    function checkCurrentTask() {
+        let userCode = document.getElementById('code-editor').value;
+        savedStudentCodes[currentTaskIndex] = userCode; 
+        
+        let validationResult = tasks[currentTaskIndex].check(userCode);
+
+        if (validationResult === true) {
+            activeExecutedCode = userCode; 
+            document.getElementById('completion-badge').innerText = "🎉 إجابة عبقرية! صحيحة 100%";
+            document.getElementById('completion-badge').style.color = "#00ffcc";
+            
+            studentHistory[currentTaskIndex] = userCode;
+            
+            if (currentTaskIndex === maxOpenedTaskIndex) {
+                maxOpenedTaskIndex++;
+            }
+            document.getElementById('next-btn').disabled = false;
+        } else {
+            alert(validationResult);
+        }
+    }
+
+    function nextTask() {
+        if (currentTaskIndex <= maxOpenedTaskIndex) {
+            loadTask(currentTaskIndex + 1);
+        }
+    }
+
+    function prevTask() {
+        if (currentTaskIndex > 0) {
+            loadTask(currentTaskIndex - 1);
+        }
+    }
+
+    function setup() {
+        let canvas = createCanvas(380, 280);
+        canvas.parent('canvas-container');
+        loadTask(currentTaskIndex);
+    }
+
+    function draw() {
+        background(20);
+        
+        strokeWeight(1);
+        noStroke();
+
+        let speed = 2;
+        
+        try {
+            if(activeExecutedCode) {
+                let codeToEval = activeExecutedCode;
+                // تعديل ذكي للمستوى 5: تحويل خط الإطار تلقائياً للون الأحمر الناري الواضح جداً عند زيادة السمك
+                if (currentTaskIndex === 4 && activeExecutedCode.includes("strokeWeight(5)")) {
+                    codeToEval = activeExecutedCode.replace("strokeWeight(5);", "stroke(255, 0, 50); strokeWeight(5);");
+                }
+
+                eval(codeToEval);
+
+                let speedMatch = activeExecutedCode.match(/speed\s*=\s*(\d+)/);
+                if(speedMatch) speed = parseInt(speedMatch[1]);
+            }
+
+            posX += speed * direction;
+            if (posX > width || posX < 0) direction *= -1;
+
+            if (typeof updateLogic === 'function') {
+                updateLogic(posX);
+            }
+            if (typeof drawShape === 'function') {
+                drawShape(posX, height / 2);
+            }
+        } catch (e) {
+            // صامت لحماية العرض البصري
+        }
+    }
+
+    function sendWhatsAppReport() {
+        const teacherNumber = "201555772562";
+        const studentName = document.getElementById('student-name').value;
+
+        if (!studentName) {
+            alert("الرجاء كتابة اسمك البطل أولاً قبل الإرسال! 😊");
+            return;
+        }
+
+        let message = `*🏆 تقرير وسام الشرف البرمجي لبطل مبرمج المستقبل* 🏆\n\n`;
+        message += `👤 *اسم الطالب البطل:* ${studentName}\n`;
+        message += `🚀 *الإنجاز:* تم اجتياز وتفكيك الـ 6 ألغاز البرمجية كاملة بنجاح وتفوق باهر!\n\n`;
+        message += `💻 *شفرات الكود التي صممها البطل بنفسه:* \n`;
+        
+        for(let i=0; i<tasks.length; i++) {
+            message += `\n*🧩 شفرة اللغز رقم ${i+1}:*\n\`\`\`javascript\n${studentHistory[i]}\n\`\`\`\n`;
+        }
+
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappURL = `https://api.whatsapp.com/send?phone=${teacherNumber}&text=${encodedMessage}`;
+        window.open(whatsappURL, '_blank');
+    }
+</script>
+
+</body>
+</html>
